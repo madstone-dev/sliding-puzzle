@@ -42,7 +42,7 @@ function App() {
           }
         }
       });
-      const N = randomSet.indexOf(EMPTY_TILE) + 1;
+      const N = difficulty.cut;
       if (N % 2 !== 0) {
         if (inversion % 2 === 0) {
           ok = true;
