@@ -118,7 +118,8 @@ function App() {
     Math.min(MAX_SIZE / img.width, MAX_SIZE / img.height);
 
   useEffect(() => {
-    setBoard(resetPuzzle(difficulty));
+    const newPuzzle = resetPuzzle(difficulty);
+    setBoard(newPuzzle);
     if (fileInput.current) {
       const files = fileInput.current.files;
       if (files[0]) {
@@ -161,7 +162,6 @@ function App() {
         const ratio = getRatio(img);
         setSize({ width: ratio * img.width, height: ratio * img.height });
         setImage(url);
-        setBoard(resetPuzzle(difficulty));
       };
       img.src = url;
     }
@@ -268,6 +268,7 @@ function App() {
           />
         </label>
       </div>
+      {image && <img src={image} width="160" />}
       <div className="wrapper__buttons">
         <div
           style={{
