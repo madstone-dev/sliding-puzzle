@@ -3,7 +3,6 @@ import { faRedo } from "@fortawesome/free-solid-svg-icons";
 import { useCallback, useEffect, useRef, useState } from "react";
 import "./App.css";
 
-const MAX_SIZE = 500;
 const EMPTY_TILE = -1;
 const EASY = {
   tiles: [EMPTY_TILE],
@@ -26,6 +25,14 @@ for (let i = 0; i < 24; i++) {
   }
   HARD.tiles.push(i);
 }
+
+const getWindowDimensions = () => {
+  const { innerWidth: width, innerHeight: height } = window;
+  return {
+    width,
+    height,
+  };
+};
 
 function App() {
   const resetPuzzle = useCallback((difficulty) => {
@@ -60,31 +67,41 @@ function App() {
     }
     return randomSet;
   }, []);
-
-  const fileInput = useRef();
   const [difficulty, setDifficulty] = useState(EASY);
-  const [board, setBoard] = useState([]);
-  const [image, setImage] = useState("");
-  const [size, setSize] = useState({
-    width: MAX_SIZE,
-    height: MAX_SIZE,
-  });
-  const [finish, setFinish] = useState(false);
-  let answer = [...board].sort((a, b) => a - b);
-  answer.shift();
-  answer.push(-1);
 
-  const tileSize = {
-    width: `${parseInt(size.width / difficulty.cut)}px`,
-    height: `${parseInt(size.height / difficulty.cut)}px`,
+  const getMaxSize = () => {
+    return Math.min(500, getWindowDimensions().width - 30);
   };
 
+  const [maxSize, setMaxsize] = useState(getMaxSize());
+  const [boardSize, setBoardSize] = useState({
+    width: maxSize,
+    height: maxSize,
+  });
+
+  const getTileSize = () => {
+    return {
+      width: `${parseInt(boardSize.width / difficulty.cut)}px`,
+      height: `${parseInt(boardSize.height / difficulty.cut)}px`,
+    };
+  };
+
+  const [tileSize, setTileSize] = useState(getTileSize());
   const boardGrid = {
     gridTemplateRows: `${"1fr ".repeat(difficulty.cut)}`,
     gridTemplateColumns: `${"1fr ".repeat(difficulty.cut)}`,
     overflow: "hidden",
-    maxHeight: `${size.height}px`,
+    maxWidth: `${boardSize.width}px`,
+    maxHeight: `${boardSize.width}px`,
   };
+
+  const fileInput = useRef();
+  const [board, setBoard] = useState([]);
+  const [image, setImage] = useState("");
+  const [finish, setFinish] = useState(false);
+  let answer = [...board].sort((a, b) => a - b);
+  answer.shift();
+  answer.push(-1);
 
   const moveTile = (index) => {
     let copiedBoard = [...board];
@@ -114,8 +131,29 @@ function App() {
     }
   };
 
-  const getRatio = (img) =>
-    Math.min(MAX_SIZE / img.width, MAX_SIZE / img.height);
+  const resizeWindow = () => {
+    setMaxsize(getMaxSize());
+  };
+
+  const getRatio = (img) => Math.min(maxSize / img.width, maxSize / img.height);
+
+  useEffect(() => {
+    window.addEventListener("resize", resizeWindow);
+    return () => {
+      window.removeEventListener("resize", resizeWindow);
+    };
+  }, []);
+
+  useEffect(() => {
+    setBoardSize({
+      width: maxSize,
+      height: maxSize,
+    });
+  }, [maxSize]);
+
+  useEffect(() => {
+    setTileSize(getTileSize());
+  }, [boardSize, difficulty]);
 
   useEffect(() => {
     const newPuzzle = resetPuzzle(difficulty);
@@ -127,7 +165,10 @@ function App() {
         const img = new Image();
         img.onload = () => {
           const ratio = getRatio(img);
-          setSize({ width: ratio * img.width, height: ratio * img.height });
+          setBoardSize({
+            width: ratio * img.width,
+            height: ratio * img.height,
+          });
         };
         img.src = url;
       }
@@ -160,7 +201,7 @@ function App() {
       const img = new Image();
       img.onload = () => {
         const ratio = getRatio(img);
-        setSize({ width: ratio * img.width, height: ratio * img.height });
+        setBoardSize({ width: ratio * img.width, height: ratio * img.height });
         setImage(url);
       };
       img.src = url;
@@ -216,15 +257,17 @@ function App() {
                     style={{
                       backgroundImage: `url(${image})`,
                       backgroundPositionY: `${
-                        (parseInt(tile / difficulty.cut) * -1 * size.height) /
+                        (parseInt(tile / difficulty.cut) *
+                          -1 *
+                          boardSize.height) /
                         difficulty.cut
                       }px`,
                       backgroundPositionX: `${
-                        ((tile % difficulty.cut) * -1 * size.width) /
+                        ((tile % difficulty.cut) * -1 * boardSize.width) /
                         difficulty.cut
                       }px`,
-                      width: `${size.width}px`,
-                      height: `${size.height}px`,
+                      width: `${boardSize.width}px`,
+                      height: `${boardSize.height}px`,
                     }}
                   ></div>
                 )}
