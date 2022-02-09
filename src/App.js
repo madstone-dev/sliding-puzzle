@@ -92,7 +92,7 @@ function App() {
     gridTemplateColumns: `${"1fr ".repeat(difficulty.cut)}`,
     overflow: "hidden",
     maxWidth: `${boardSize.width}px`,
-    maxHeight: `${boardSize.width}px`,
+    maxHeight: `${boardSize.height}px`,
   };
 
   const fileInput = useRef();
@@ -135,7 +135,12 @@ function App() {
     setMaxsize(getMaxSize());
   };
 
-  const getRatio = (img) => Math.min(maxSize / img.width, maxSize / img.height);
+  const [ratio, setRatio] = useState(1);
+
+  const getRatio = (img) => {
+    setRatio(ratio);
+    return Math.min(maxSize / img.width, maxSize / img.height);
+  };
 
   useEffect(() => {
     window.addEventListener("resize", resizeWindow);
@@ -147,7 +152,7 @@ function App() {
   useEffect(() => {
     setBoardSize({
       width: maxSize,
-      height: maxSize,
+      height: maxSize * ratio,
     });
   }, [maxSize]);
 
